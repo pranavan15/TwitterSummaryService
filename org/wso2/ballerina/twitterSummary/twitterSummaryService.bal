@@ -65,7 +65,7 @@ service<http> twitterSummaryService {
 
         var searchResponse, e = twitterConnectorEP.getUserFollowers ();
         json responsePayload = searchResponse.getJsonPayload();
-        println(responsePayload);
+        responsePayload = responsePayload["users"];
         json[] resultsPayload = [];
         if(e == null) {
             int i;
@@ -73,7 +73,44 @@ service<http> twitterSummaryService {
                 json payloadElement = {};
                 payloadElement["name"] = responsePayload[i]["name"];
                 payloadElement["screen_name"] = responsePayload[i]["screen_name"];
-                payloadElement["Friends_from"] = responsePayload[i]["created_at"];
+                payloadElement["Following_from"] = responsePayload[i]["created_at"];
+                resultsPayload[i] = payloadElement;
+                i = i + 1;
+            }
+            resp.setJsonPayload((json)resultsPayload);
+        _ = resp.send();
+        }
+        else {
+            resp.setJsonPayload("Something Wrong");
+        _ = resp.send();
+        }
+    }
+    
+    @http:resourceConfig {
+        methods:["POST"],
+        path:"/getFollowingFriends"
+    }
+    resource getFollowingFriends (http:Request req, http:Response resp) {
+        json reqPayload = req.getJsonPayload();
+        accessToken, accessTokenSecret = getAccessTokens(reqPayload);
+        var query, _ = (string)reqPayload.query;
+        
+        twitter:ClientConnector clientConnector =  create twitter:ClientConnector(consumerKey, consumerSecret, accessToken, accessTokenSecret);
+        bind clientConnector with twitterConnectorEP;
+        
+        //var tweetResponse, e = twitterConnectorEP.tweet (query);
+
+        var searchResponse, e = twitterConnectorEP.getUserFollowingFriends ();
+        json responsePayload = searchResponse.getJsonPayload();
+        responsePayload = responsePayload["users"];
+        json[] resultsPayload = [];
+        if(e == null) {
+            int i;
+            while(i < lengthof responsePayload) {
+                json payloadElement = {};
+                payloadElement["name"] = responsePayload[i]["name"];
+                payloadElement["screen_name"] = responsePayload[i]["screen_name"];
+                payloadElement["Following_from"] = responsePayload[i]["created_at"];
                 resultsPayload[i] = payloadElement;
                 i = i + 1;
             }
